@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#10131a" />
+  <meta name="description" content="AI社員オフィス - 0円・ブラウザ内AIで業務を分担する仮想会社OS" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <title>AI社員オフィス｜Company OS</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="boot" class="boot-screen">
+    <div class="boot-card pixel-card">
+      <div class="eyebrow">ZERO COST / LOCAL AI</div>
+      <div class="boot-logo"><span class="logo-chip">AI</span><span>AI COMPANY</span></div>
+      <h1>AI社員オフィス</h1>
+      <p>秘書を司令塔に、8部署が案件・タスク・成果物を処理する業務OSです。</p>
+      <div class="boot-grid">
+        <div><b>0円</b><small>API料金なし</small></div>
+        <div><b>LOCAL</b><small>ブラウザ内AI</small></div>
+        <div><b>8</b><small>専門部署</small></div>
+      </div>
+      <button id="startBtn" class="btn btn-primary btn-xl">AI会社を起動する</button>
+      <div id="bootStatus" class="status-text">WebGPU対応ブラウザならAIを端末内で起動できます。</div>
+      <div class="boot-note">※ AIモデルは初回起動時にダウンロードされ、以降はブラウザ側のキャッシュが利用されます。</div>
+      <button id="demoBtn" class="btn btn-ghost">AIなしでデモ画面を見る</button>
+    </div>
+  </div>
+
+  <div id="app" class="app hidden">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">AI</div>
+        <div><strong>AI社員オフィス</strong><span>COMPANY OPERATING SYSTEM</span></div>
+      </div>
+      <div class="top-status">
+        <span id="aiBadge" class="badge badge-gray">● AI未起動</span>
+        <span id="clock"></span>
+        <button id="settingsBtn" class="icon-btn" title="設定">⚙</button>
+      </div>
+    </header>
+
+    <div class="app-layout">
+      <aside class="left-sidebar">
+        <div class="sidebar-section">
+          <div class="section-label">COMMAND</div>
+          <button class="nav-item active" data-view="home">▦ <span>司令室</span></button>
+          <button class="nav-item" data-view="projects">◈ <span>案件</span><em id="projectCount">0</em></button>
+          <button class="nav-item" data-view="tasks">☷ <span>タスク</span><em id="taskNavCount">0</em></button>
+          <button class="nav-item" data-view="artifacts">▣ <span>成果物</span><em id="artifactNavCount">0</em></button>
+          <button class="nav-item" data-view="employees">♙ <span>AI社員</span></button>
+          <button class="nav-item" data-view="activity">◌ <span>活動ログ</span></button>
+        </div>
+        <div class="sidebar-section">
+          <div class="section-label">WORKFLOW</div>
+          <div class="mini-stat"><span>未処理</span><b id="todoStat">0</b></div>
+          <div class="mini-stat"><span>進行中</span><b id="doingStat">0</b></div>
+          <div class="mini-stat"><span>完了</span><b id="doneStat">0</b></div>
+        </div>
+        <div class="sidebar-bottom">
+          <button id="backupBtn" class="nav-item">⇩ <span>データをバックアップ</span></button>
+          <button id="resetDataBtn" class="nav-item danger">↻ <span>ローカルデータ初期化</span></button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section id="view-home" class="view active-view">
+          <div class="page-head">
+            <div>
+              <div class="eyebrow">COMMAND CENTER</div>
+              <h2>会社の状況</h2>
+              <p>全体指示を出すと、秘書AIが必要な部署へタスクを配分します。</p>
+            </div>
+            <div class="head-actions">
+              <button id="newProjectBtn" class="btn btn-secondary">＋ 新規案件</button>
+              <button id="quickBriefBtn" class="btn btn-ghost">日報を作る</button>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi"><span>稼働社員</span><b id="kpiEmployees">0/8</b><small>現在の処理中</small></div>
+            <div class="kpi"><span>案件</span><b id="kpiProjects">0</b><small>ローカル保存</small></div>
+            <div class="kpi"><span>タスク</span><b id="kpiTasks">0</b><small>会社全体</small></div>
+            <div class="kpi"><span>成果物</span><b id="kpiArtifacts">0</b><small>あなたが取得可能</small></div>
+          </div>
+
+          <div class="home-grid">
+            <section class="office-card pixel-card">
+              <div class="card-head"><div><b>AI COMPANY / 2F</b><span>トップビュー・ピクセルオフィス</span></div><span id="officeLoad" class="pill">待機中</span></div>
+              <div id="office" class="office-grid"></div>
+            </section>
+
+            <section class="chat-card pixel-card">
+              <div class="card-head"><div><b>社長室チャット</b><span>全体または部署へ直接指示</span></div></div>
+              <div class="chat-target-row">
+                <label>宛先<select id="targetSelect">
+                  <option value="company">全体 / 秘書</option>
+                  <option value="secretary">秘書・経営企画</option>
+                  <option value="sales">営業部</option>
+                  <option value="planning">企画部</option>
+                  <option value="hr">人事部</option>
+                  <option value="se">SE部</option>
+                  <option value="design">デザイン部</option>
+                  <option value="general">総務部</option>
+                  <option value="accounting">経理部</option>
+                </select></label>
+                <label class="switch-label"><input id="collabToggle" type="checkbox" checked /><span class="switch"></span>部署連携</label>
+              </div>
+              <div id="chatLog" class="chat-log"></div>
+              <div class="composer">
+                <textarea id="prompt" rows="4" placeholder="例：宙AIM CUP Vol.3のスポンサー募集を、企画→営業→デザイン→経理まで連携して準備して"></textarea>
+                <div class="composer-foot"><span id="processStatus">待機中</span><button id="sendBtn" class="btn btn-primary">送信 ↵</button></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-projects" class="view">
+          <div class="page-head"><div><div class="eyebrow">PROJECT MANAGEMENT</div><h2>案件管理</h2><p>目的・期限・担当部署をまとめ、会社の仕事を案件単位で追跡します。</p></div><button id="newProjectBtn2" class="btn btn-primary">＋ 案件を作成</button></div>
+          <div id="projectBoard" class="project-board"></div>
+        </section>
+
+        <section id="view-tasks" class="view">
+          <div class="page-head"><div><div class="eyebrow">TASK CONTROL</div><h2>タスクセンター</h2><p>AI社員へ割り当てられた仕事を、未処理・進行中・完了で管理します。</p></div><button id="newTaskBtn" class="btn btn-primary">＋ タスク作成</button></div>
+          <div class="filter-row"><input id="taskSearch" class="input" placeholder="タスク・案件を検索" /><select id="taskFilter"><option value="all">すべて</option><option value="todo">未処理</option><option value="doing">進行中</option><option value="done">完了</option></select></div>
+          <div id="taskTable" class="table-wrap"></div>
+        </section>
+
+        <section id="view-artifacts" class="view">
+          <div class="page-head"><div><div class="eyebrow">DELIVERABLES</div><h2>成果物倉庫</h2><p>AI社員が生成した文書・CSV・Markdown・HTMLなどをローカルに保存します。</p></div><button id="clearArtifactsBtn" class="btn btn-ghost">成果物を整理</button></div>
+          <div id="artifactGrid" class="artifact-grid"></div>
+        </section>
+
+        <section id="view-employees" class="view">
+          <div class="page-head"><div><div class="eyebrow">AI WORKFORCE</div><h2>AI社員</h2><p>部署ごとに専門プロンプト、役割、担当領域を持つAI社員です。</p></div></div>
+          <div id="employeeGrid" class="employee-grid"></div>
+        </section>
+
+        <section id="view-activity" class="view">
+          <div class="page-head"><div><div class="eyebrow">AUDIT TRAIL</div><h2>活動ログ</h2><p>指示・割当・完了・成果物作成の履歴をローカルに記録します。</p></div><button id="clearLogBtn" class="btn btn-ghost">ログ消去</button></div>
+          <div id="activityList" class="activity-list"></div>
+        </section>
+      </main>
+
+      <aside class="right-sidebar">
+        <section class="side-panel">
+          <div class="panel-title"><b>成果物</b><span>最新5件</span></div>
+          <div id="sideArtifacts" class="side-list"></div>
+        </section>
+        <section class="side-panel">
+          <div class="panel-title"><b>会社の稼働状況</b><span id="companyState">待機中</span></div>
+          <div id="presenceList" class="presence-list"></div>
+        </section>
+        <section class="side-panel notice-panel">
+          <div class="panel-title"><b>0円運用の条件</b></div>
+          <p>AIはWebGPU対応ブラウザ内で動作します。外部AI APIキーは不要です。</p>
+          <small>GitHub Pagesは静的配信なので、個人用業務ツールとして利用し、機密情報は入力しないでください。</small>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <dialog id="projectDialog" class="modal">
+    <form method="dialog" id="projectForm" class="modal-card">
+      <div class="modal-head"><b>新規案件</b><button value="cancel" class="icon-btn">×</button></div>
+      <label>案件名<input id="projectName" required class="input" /></label>
+      <label>目的<textarea id="projectGoal" rows="3" class="input"></textarea></label>
+      <div class="two-col"><label>期限<input id="projectDue" type="date" class="input" /></label><label>状態<select id="projectStatus" class="input"><option value="active">進行中</option><option value="draft">準備中</option><option value="done">完了</option></select></label></div>
+      <button value="default" class="btn btn-primary">案件を保存</button>
+    </form>
+  </dialog>
+
+  <dialog id="taskDialog" class="modal">
+    <form method="dialog" id="taskForm" class="modal-card">
+      <div class="modal-head"><b>新規タスク</b><button value="cancel" class="icon-btn">×</button></div>
+      <label>タスク名<input id="taskName" required class="input" /></label>
+      <div class="two-col"><label>担当部署<select id="taskDept" class="input"></select></label><label>期限<input id="taskDue" type="date" class="input" /></label></div>
+      <label>案件<select id="taskProject" class="input"></select></label>
+      <button value="default" class="btn btn-primary">タスクを作成</button>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog" class="modal">
+    <form method="dialog" class="modal-card large">
+      <div class="modal-head"><b>会社設定</b><button value="cancel" class="icon-btn">×</button></div>
+      <label>会社名<input id="companyNameInput" class="input" value="AI COMPANY" /></label>
+      <label>代表者名<input id="ownerNameInput" class="input" value="代表" /></label>
+      <label>AIモデル<select id="modelSelect" class="input"></select></label>
+      <div class="settings-box"><b>0円モード</b><p>外部APIを使用せず、WebLLMで端末内推論します。AIモデルの変更は次回起動時から反映されます。</p></div>
+      <button value="default" class="btn btn-primary" id="saveSettingsBtn">設定を保存</button>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

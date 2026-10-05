@@ -1,0 +1,2 @@
+This project is provided as-is for personal/educational productivity use.
+Third-party components, including WebLLM and the selected AI model, remain subject to their own licenses and terms.

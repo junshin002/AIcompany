@@ -1,0 +1,9 @@
+{
+  "name":"AI社員オフィス",
+  "short_name":"AI Office",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#090b0f",
+  "theme_color":"#10131a",
+  "icons":[]
+}
